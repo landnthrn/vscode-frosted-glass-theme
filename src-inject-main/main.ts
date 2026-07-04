@@ -1,16 +1,52 @@
-import { app } from "electron/main";
+import { app, BrowserWindow, screen } from "electron/main";
 import { proxy } from "../common/proxy";
+import { getMicaGeometry } from "../common/fakeMicaGeometry";
 import config from "../config/config.json" with { type: "json" };
 
-if (config.fakeMica.enabled && config.fakeMica.moveWithWindow) {
-  app.on("browser-window-created", (_, win) => {
-    const updateMica = () => {
-      if (win.isVisible()) win.webContents.send("vscode:update-mica");
-    };
+function sendMicaUpdate(win: BrowserWindow) {
+  if (win.webContents.isDestroyed()) return;
 
-    win.on("move", updateMica);
-    win.on("moved", updateMica);
-    win.on("unmaximize", updateMica);
+  const content = win.getContentBounds();
+  const display = screen.getDisplayMatching(content);
+  win.webContents.send(
+    "vscode:update-mica",
+    getMicaGeometry(content.x, content.y, display.bounds)
+  );
+}
+
+function scheduleMicaUpdate(win: BrowserWindow) {
+  sendMicaUpdate(win);
+  setTimeout(() => sendMicaUpdate(win), 0);
+  setTimeout(() => sendMicaUpdate(win), 100);
+}
+
+function attachMicaWindowHooks(win: BrowserWindow) {
+  const updateMica = () => scheduleMicaUpdate(win);
+
+  win.on("ready-to-show", updateMica);
+  win.on("show", updateMica);
+  win.on("restore", updateMica);
+  win.on("move", updateMica);
+  win.on("moved", updateMica);
+  win.on("resize", updateMica);
+  win.on("maximize", updateMica);
+  win.on("unmaximize", updateMica);
+  win.on("enter-full-screen", updateMica);
+  win.on("leave-full-screen", updateMica);
+  win.webContents.on("did-finish-load", updateMica);
+}
+
+if (config.fakeMica.enabled) {
+  app.on("browser-window-created", (_, win) => {
+    attachMicaWindowHooks(win);
+  });
+
+  app.once("ready", () => {
+    screen.on("display-metrics-changed", () => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        scheduleMicaUpdate(win);
+      }
+    });
   });
 
   // Allow auxiliary window listening to channel

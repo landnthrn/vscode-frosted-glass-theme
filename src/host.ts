@@ -353,6 +353,7 @@ export async function applyCursorSettingsDefaults(
       true
     ),
     fgtConfig.update("fakeMica.filter", CURSOR_FAKE_MICA_FILTER, true),
+    fgtConfig.update("fakeMica.moveWithWindow", true, true),
     fgtConfig.update("variable", { ...CURSOR_VARIABLE }, true),
     fgtConfig.update("variableDark", { ...CURSOR_VARIABLE_DARK }, true),
     fgtConfig.update(

@@ -1,10 +1,37 @@
 import config from "../config/config.json" with { type: "json" };
+import {
+  getMicaBackgroundPosition,
+  getMicaCoverSize,
+  isMicaGeometry,
+  isValidMicaGeometry,
+  type MicaGeometry,
+} from "../common/fakeMicaGeometry";
 import { resolveFakeMicaBackgroundUrl } from "./utils/fakeMicaUrl";
 import { css } from "./utils/utils";
 import fgtSheet from "./vscode-frosted-glass-theme.css" with { type: "css" };
 
 const { fakeMica } = config;
 const MICA_LAYER_CLASS = "fgt-mica-layer";
+
+let pendingMicaGeometry: MicaGeometry | undefined;
+let micaImageSize: { width: number; height: number } | undefined;
+let micaLayer: HTMLElement | undefined;
+
+function onMicaGeometryIpc(_e: unknown, geo?: unknown) {
+  if (!isMicaGeometry(geo) || !isValidMicaGeometry(geo)) return;
+  pendingMicaGeometry = geo;
+  if (!micaLayer) return;
+  if (fakeMica.moveWithWindow) applyMicaGeometry(micaLayer, geo);
+  else applyStaticMicaGeometry(micaLayer, geo);
+}
+
+if (
+  fakeMica.enabled &&
+  typeof window !== "undefined" &&
+  window.vscode?.ipcRenderer
+) {
+  window.vscode.ipcRenderer.on("vscode:update-mica", onMicaGeometryIpc);
+}
 
 if (fakeMica.enabled) {
   fgtSheet.insertRule(css`
@@ -78,16 +105,37 @@ if (fakeMica.enabled) {
   }
 }
 
-function getMicaX(win: Window) {
-  return win.screenX >= -win.outerWidth && win.screenX <= screen.width
-    ? `${-win.screenX}px`
-    : "center";
+function applyMicaGeometry(layer: HTMLElement, geo: MicaGeometry) {
+  if (!isValidMicaGeometry(geo)) return;
+
+  const imageWidth = micaImageSize?.width ?? geo.displayWidth;
+  const imageHeight = micaImageSize?.height ?? geo.displayHeight;
+  const { size, position } = getMicaBackgroundPosition(
+    geo,
+    imageWidth,
+    imageHeight
+  );
+  layer.style.backgroundSize = size;
+  layer.style.backgroundPosition = position;
 }
 
-function getMicaY(win: Window) {
-  return win.screenY >= -win.outerHeight && win.screenY <= screen.height
-    ? `${-win.screenY}px`
-    : "center";
+function applyStaticMicaGeometry(layer: HTMLElement, geo: MicaGeometry) {
+  if (!isValidMicaGeometry(geo)) return;
+
+  const imageWidth = micaImageSize?.width ?? geo.displayWidth;
+  const imageHeight = micaImageSize?.height ?? geo.displayHeight;
+  layer.style.backgroundSize = getMicaCoverSize(
+    geo.displayWidth,
+    geo.displayHeight,
+    imageWidth,
+    imageHeight
+  );
+  layer.style.backgroundPosition = "center center";
+}
+
+function tryApplyPendingMicaGeometry(layer: HTMLElement) {
+  if (!pendingMicaGeometry) return;
+  applyMicaGeometry(layer, pendingMicaGeometry);
 }
 
 async function loadMicaBackgroundUrl(url: string): Promise<string> {
@@ -100,6 +148,16 @@ async function loadMicaBackgroundUrl(url: string): Promise<string> {
   } catch {
     return resolved;
   }
+}
+
+function loadMicaImageSize(url: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () =>
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => reject(new Error("Failed to read fake mica image size"));
+    img.src = url;
+  });
 }
 
 export async function applyFakeMica(
@@ -116,25 +174,21 @@ export async function applyFakeMica(
     layer.className = MICA_LAYER_CLASS;
     element.prepend(layer);
   }
+  micaLayer = layer;
 
   const backgroundUrl = await loadMicaBackgroundUrl(fakeMica.url);
+  try {
+    micaImageSize = await loadMicaImageSize(backgroundUrl);
+  } catch {
+    micaImageSize = undefined;
+  }
+
   layer.style.filter = fakeMica.filter;
   layer.style.backgroundImage = `url("${backgroundUrl}")`;
-  layer.style.backgroundSize = `${screen.width}px ${screen.height}px`;
   layer.style.backgroundRepeat = "no-repeat";
-  layer.style.backgroundPosition = `var(--fgt-mica-x) var(--fgt-mica-y)`;
 
   element.classList.add("fgt-mica-svg-loaded");
 
-  if (fakeMica.moveWithWindow) {
-    const win = element.ownerDocument.defaultView;
-    if (win) {
-      const updateMica = () => {
-        element.style.setProperty("--fgt-mica-x", getMicaX(win));
-        element.style.setProperty("--fgt-mica-y", getMicaY(win));
-      };
-      updateMica();
-      win.vscode.ipcRenderer.on("vscode:update-mica", updateMica);
-    }
-  }
+  if (fakeMica.moveWithWindow) tryApplyPendingMicaGeometry(layer);
+  else if (pendingMicaGeometry) applyStaticMicaGeometry(layer, pendingMicaGeometry);
 }
