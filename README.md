@@ -21,15 +21,79 @@ Custom SVG is supported.
 </span>
 
 ## Preview
-[![Video](https://img.youtube.com/vi/rpnfE7YDdg4/0.jpg)](https://www.youtube.com/watch?v=rpnfE7YDdg4) \
-![Animation](image/Animation.gif) \
-![FakeMica](image/FakeMica.jpg) \
-![CodeHover](image/CodeHover.jpg) \
-![ContextMenu](image/ContextMenu.jpg) \
-![MenuBar](image/MenuBar.jpg) \
-![SearchBar](image/SearchBar.jpg) \
-![CommandPanel](image/CommandPanel.jpg) \
-![PanelHeader](image/PanelHeader.jpg)
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <a href="https://www.youtube.com/watch?v=rpnfE7YDdg4">
+        <img src="https://img.youtube.com/vi/rpnfE7YDdg4/0.jpg" alt="Preview" width="100%">
+      </a>
+      <br>
+      <sub>Preview</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="image/Animation.gif" alt="Animation" width="100%">
+      <br>
+      <sub>Animation</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="image/FakeMica.jpg" alt="Fake Mica" width="100%">
+      <br>
+      <sub>Fake Mica</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="image/CodeHover.jpg" alt="Code Hover" width="100%">
+      <br>
+      <sub>Code Hover</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="image/ContextMenu.jpg" alt="Context Menu" width="100%">
+      <br>
+      <sub>Context Menu</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="image/MenuBar.jpg" alt="Menu Bar" width="100%">
+      <br>
+      <sub>Menu Bar</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="image/CommandPanel.jpg" alt="Command Panel" width="100%">
+      <br>
+      <sub>Command Panel</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="image/PanelHeader.jpg" alt="Panel Header" width="100%">
+      <br>
+      <sub>Panel Header</sub>
+      <br><br>
+      <img src="image/SearchBar.jpg" alt="Search Bar" width="100%">
+      <br>
+      <sub>Search Bar</sub>
+    </td>
+  </tr>
+</table>
+
+## Cursor Preview
+<img width="1280" height="719" alt="cursor-frosted-glass-theme-preview" src="https://github.com/user-attachments/assets/0a686c24-38d6-41fa-88f1-b9eead68e43f" />
+
+
+### Fork Note:
+> - Added support & compatibility for Cursor  
+> - Added Cursor default theme
+> - Added convenient frosted-glass-theme inputs to be easily editable via `settings.json`
+> - Number of modifications tuned for Cursor  
+>   - Program detection to tailor theme commands, appearance, injection, & notifications for Cursor users  
+>   - Inject of inputs for `settings.json` tuned nicely for Cursor  
+>   - Targeted overrides for certain elements that needed blur support, or were annoyingly forced to be synced with other inputs
+>   - Injection patches improved for Cursor *(CSP + main-process window move handling so inject loads after restart)*
+>   - Suggests full quit on restart notification buttons *(Cursor required it for some refreshing)*  
+>   - Hides false-positive corrupt-installation notification *(Cursor doesn't offer 'Don't Show Again' unlike VS Code)*  
+
 ## Install
 1. Install this extension.
 1. Open command panel, type in `Frosted Glass Theme: Enable`, press enter.
@@ -91,7 +155,8 @@ You need to set `window.titleBarStyle` to `custom` to see the effect. Otherwise 
 ## Uninstall
 1. Open command panel, type in "Frosted Glass Theme: Disable", press enter.
 1. Uninstall from the extension panel as usual.
-1. Remove `"workbench.colorCustomizations"` if you want to.
+1. Remove `frosted-glass-theme` related inputs from `settings.json`
+1. Remove `"workbench.colorCustomizations"` inputs from `settings.json` if you want to.
 ## Known Issue
 * Since Windows 24H2, Microsoft may have changed the wallpaper location. Follow the steps: 
   1. Create a hard link: `cd $env:AppData\Microsoft\Windows\Themes; cmd /c mklink /H .\TranscodedWallpaper.jpg .\TranscodedWallpaper`.
