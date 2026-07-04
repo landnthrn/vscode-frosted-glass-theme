@@ -7,11 +7,11 @@
     "theme": "dark"
   },
   "publisher": "RichardLuo",
-  "description": "Bring frosted glass menu (like windows acrylic or mac os) to your vscode!",
-  "version": "0.8.26",
+  "description": "Bring frosted glass menu (like windows acrylic or mac os) to your vscode or cursor!",
+  "version": "0.9.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/RichardLuo0/vscode-frosted-glass-theme"
+    "url": "https://github.com/landnthrn/vscode-cursor-frosted-glass-theme"
   },
   "license": "MIT",
   "engines": {
