@@ -115,6 +115,7 @@ type Filter = {
   filter: string;
   disableBackgroundColor: boolean;
   opacity: number;
+  customAttrs?: { [selector: string]: { [key: string]: any } };
   /** When set, overrides feGaussianBlur stdDeviation in the acrylic SVG for this surface. */
   acrylicBlur?: number;
 };
@@ -199,15 +200,30 @@ async function applyBackdropFilterOnEntry(
       wrapper.style.setProperty("--fgt-current-opacity", `${opacity * 100}%`);
     });
   await mountSvgTo(wrapper, true);
-  const acrylicBlur = getFilter(entry[0])?.acrylicBlur;
+
+  wrapper
+    .querySelectorAll("filter")
+    .forEach(f => (f.id = f.id + "-" + entry[0]));
+
+  const filter = getFilter(entry[0]);
+  const customAttrs = filter?.customAttrs;
+  if (customAttrs) {
+    for (const selector in customAttrs) {
+      const attrMap = customAttrs[selector];
+      wrapper.querySelectorAll(selector).forEach(e => {
+        for (const name in attrMap) e.setAttribute(name, attrMap[name]);
+      });
+    }
+  }
+
+  // Applied after customAttrs so Cursor *Blur → acrylicBlur wins when set.
+  const acrylicBlur = filter?.acrylicBlur;
   if (acrylicBlur !== undefined) {
     wrapper.querySelectorAll("feGaussianBlur").forEach(node => {
       node.setAttribute("stdDeviation", String(acrylicBlur));
     });
   }
-  wrapper
-    .querySelectorAll("filter")
-    .forEach(f => (f.id = f.id + "-" + entry[0]));
+
   element.appendChild(wrapper);
 }
 

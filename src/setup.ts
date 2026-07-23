@@ -75,7 +75,7 @@ async function chooseWallpaper(fgtConfig: WorkspaceConfiguration) {
     const items: WallpaperItem[] = [
       {
         label: "Custom",
-        detail: "Type it you self.",
+        detail: "Type it yourself.",
       },
     ];
     const promiseList: Promise<WallpaperItem[]>[] = [];

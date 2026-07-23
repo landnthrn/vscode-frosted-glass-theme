@@ -228,13 +228,9 @@ export function activate(context: ExtensionContext) {
     "frosted-glass-theme.openConfig",
     async () =>
       workspace
-        .openTextDocument({
-          content: await readFile(
-            context.asAbsolutePath("inject/config.json"),
-            "utf-8"
-          ),
-          language: "json",
-        })
+        .openTextDocument(
+          Uri.joinPath(context.extensionUri, "inject/config.json")
+        )
         .then(window.showTextDocument)
   );
 

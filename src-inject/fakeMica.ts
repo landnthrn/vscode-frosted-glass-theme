@@ -25,12 +25,44 @@ function onMicaGeometryIpc(_e: unknown, geo?: unknown) {
   else applyStaticMicaGeometry(micaLayer, geo);
 }
 
+function throttle<T extends (...args: any[]) => void>(fn: T, intervalMs = 30) {
+  let intervalId: number = 0;
+  let scheduled = false;
+  let latestArgs: Parameters<T> | null = null;
+
+  const onTick = () => {
+    if (scheduled === false) {
+      clearInterval(intervalId);
+      intervalId = 0;
+      return;
+    }
+    scheduled = false;
+    const callArgs = latestArgs;
+    latestArgs = null;
+    if (callArgs) fn(...callArgs);
+  };
+
+  return (...args: Parameters<T>) => {
+    latestArgs = args;
+    if (scheduled) return;
+    scheduled = true;
+
+    if (intervalId == 0) {
+      onTick();
+      intervalId = setInterval(onTick, intervalMs);
+    }
+  };
+}
+
 if (
   fakeMica.enabled &&
   typeof window !== "undefined" &&
   window.vscode?.ipcRenderer
 ) {
-  window.vscode.ipcRenderer.on("vscode:update-mica", onMicaGeometryIpc);
+  window.vscode.ipcRenderer.on(
+    "vscode:update-mica",
+    throttle(onMicaGeometryIpc)
+  );
 }
 
 if (fakeMica.enabled) {

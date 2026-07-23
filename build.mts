@@ -100,12 +100,12 @@ async function mergeConfiguration(
   const defaultValue = JSON.parse(await fs.readFile(defaultFile, "utf-8"));
   const packageJson = JSON.parse(await fs.readFile("package.json", "utf-8"));
 
-  const configuration = [{ title: "General", properties: {} }];
+  const configuration = [{ title: "General", properties: Object.create(null) }];
   let cursorSection: { title: string; properties: Record<string, unknown> } | null =
     null;
   const ensureCursorSection = () => {
     if (!cursorSection) {
-      cursorSection = { title: "Cursor", properties: {} };
+      cursorSection = { title: "Cursor", properties: Object.create(null) };
       configuration.push(cursorSection);
     }
     return cursorSection;
@@ -181,7 +181,7 @@ function minifyLiteralsPlugin(tags: string[]): esbuild.Plugin {
         let result = "";
         let index = 0;
         for (const literal of parseLiterals(content)) {
-          if (tags.includes(literal.tag)) {
+          if (literal.tag && tags.includes(literal.tag)) {
             for (const part of literal.parts) {
               result += content.substring(index, part.start);
               result += part.text.replace(/\s+/gm, " ");
@@ -204,7 +204,7 @@ function minifyLiteralsPlugin(tags: string[]): esbuild.Plugin {
 async function build(options: BuildOptions) {
   const result = await esbuild.build(options);
   if (result.warnings.length == 0 && result.errors.length == 0)
-    return options.outfile;
+    return options.outfile ?? "";
   else {
     throw new Error(
       options.outfile +
