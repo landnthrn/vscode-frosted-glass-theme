@@ -74,12 +74,12 @@
   background-color: transparent !important;
 }
 
-/* --- agent sidebar --- */
-/* agentSidebarBackground */
+/* --- agent side panel --- */
+/* agentSidePanelBackground (DOM classes remain Cursor's .agent-sidebar-*) */
 
 .monaco-workbench .part.unifiedsidebar .agent-sidebar-header,
 .monaco-workbench .part.unifiedsidebar .agent-sidebar-footer {
-  background-color: var(--fgt-cursor-agent-sidebar-background) !important;
+  background-color: var(--fgt-cursor-agent-sidepanel-background) !important;
 }
 
 .monaco-workbench .part.unifiedsidebar .agent-sidebar-body,
@@ -90,7 +90,7 @@
   > div
   > div:nth-child(1)
   > div {
-  background-color: var(--fgt-cursor-agent-sidebar-background) !important;
+  background-color: var(--fgt-cursor-agent-sidepanel-background) !important;
 }
 
 .monaco-workbench .part.unifiedsidebar,
@@ -185,104 +185,103 @@ div[data-testid="model-picker-menu"] .ui-scroll-area__content {
   background-color: transparent !important;
 }
 
-/* --- agent chat right-click (bubble, selection, file mention; dev-tools: .monaco-action-bar) --- */
-/* chatRightClickMenuBlur; color: menu.background; scoped via unique menu item aria-labels */
+/* --- extra Cursor menus (extraCursorMenusBlur; color: menu.background) --- */
+/* chatRC | agentSidePanelRC | sidebarIconBarDropDown | codeChangesChatPreviewBoxes */
 
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy Message"]
-  ),
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Search with Google"]
-  ),
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Add to Chat"]
-  ),
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy"]
-  ):has(.action-label[aria-label="Select All"]):not(
-    :has(.action-label[aria-label="Cut"])
-  ):not(:has(.action-label[aria-label="Copy Message"])):not(
-    :has(.action-label[aria-label="Search with Google"])
-  ):not(:has(.action-label[aria-label="Add to Chat"])) {
+.ui-menu[role="menu"]:has([aria-label="Transcript actions"]),
+.ui-menu[role="menu"]:has([aria-label="File actions"]) {
   contain: none !important;
   isolation: auto !important;
-}
-
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy Message"]
-  )
-  .monaco-action-bar,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy Message"]
-  )
-  .monaco-menu
-  > div,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Search with Google"]
-  )
-  .monaco-action-bar,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Search with Google"]
-  )
-  .monaco-menu
-  > div,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Add to Chat"]
-  )
-  .monaco-action-bar,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Add to Chat"]
-  )
-  .monaco-menu
-  > div,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy"]
-  ):has(.action-label[aria-label="Select All"]):not(
-    :has(.action-label[aria-label="Cut"])
-  ):not(:has(.action-label[aria-label="Copy Message"])):not(
-    :has(.action-label[aria-label="Search with Google"])
-  ):not(:has(.action-label[aria-label="Add to Chat"]))
-  .monaco-action-bar,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy"]
-  ):has(.action-label[aria-label="Select All"]):not(
-    :has(.action-label[aria-label="Cut"])
-  ):not(:has(.action-label[aria-label="Copy Message"])):not(
-    :has(.action-label[aria-label="Search with Google"])
-  ):not(:has(.action-label[aria-label="Add to Chat"]))
-  .monaco-menu
-  > div {
-  contain: none !important;
-  isolation: auto !important;
-  backdrop-filter: blur(var(--fgt-cursor-chat-rightclick-menu-blur, 12px)) !important;
-  -webkit-backdrop-filter: blur(
-    var(--fgt-cursor-chat-rightclick-menu-blur, 12px)
-  ) !important;
+  backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
   background-color: var(--vscode-menu-background) !important;
 }
 
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy Message"]
-  )
-  .monaco-scrollable-element,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Search with Google"]
-  )
-  .monaco-scrollable-element,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Add to Chat"]
-  )
-  .monaco-scrollable-element,
-.context-view.monaco-menu-container:has(
-    .action-label[aria-label="Copy"]
-  ):has(.action-label[aria-label="Select All"]):not(
-    :has(.action-label[aria-label="Cut"])
-  ):not(:has(.action-label[aria-label="Copy Message"])):not(
-    :has(.action-label[aria-label="Search with Google"])
-  ):not(:has(.action-label[aria-label="Add to Chat"]))
-  .monaco-scrollable-element {
+.ui-menu[role="menu"]:has([aria-label="Transcript actions"]) .ui-scroll-area__content,
+.ui-menu[role="menu"]:has([aria-label="File actions"]) .ui-scroll-area__content,
+.ui-menu[role="menu"]:has([aria-label="Transcript actions"]) .ui-menu__content,
+.ui-menu[role="menu"]:has([aria-label="File actions"]) .ui-menu__content,
+.ui-menu[role="menu"]:has([aria-label="Transcript actions"]) .ui-menu__layout,
+.ui-menu[role="menu"]:has([aria-label="File actions"]) .ui-menu__layout {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  background-color: transparent !important;
+}
+
+/* agentSidePanelRC (Monaco; may live in shadow root — TS observer + adopted sheet too) */
+.context-view.monaco-menu-container:has(.action-label[aria-label="Fork Chat"]),
+.monaco-menu-container:has(.action-label[aria-label="Fork Chat"]) {
+  contain: none !important;
+  isolation: auto !important;
+}
+
+.context-view.monaco-menu-container:has(.action-label[aria-label="Fork Chat"])
+  .monaco-scrollable-element,
+.monaco-menu-container:has(.action-label[aria-label="Fork Chat"])
+  .monaco-scrollable-element {
+  contain: none !important;
+  isolation: auto !important;
+  backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
+  background-color: var(--vscode-menu-background) !important;
+}
+
+/* sidebarIconBarDropDown */
+.monaco-workbench
+  .part.sidebar
+  div[style*="position: absolute"]:has(.sidebar-list-item) {
+  contain: none !important;
+  isolation: auto !important;
+  backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
+  background-color: var(--vscode-menu-background) !important;
+}
+
+/* codeChangesChatPreviewBoxes (collapsed + expanded share this root)
+ * Lighter tint than full menu.background so the code pane reads more glass. */
+.ui-tool-call-card.ui-edit-tool-call[data-tool-call-card-marker="root"] {
+  contain: none !important;
+  isolation: auto !important;
+  --ui-tool-call-card-bg: transparent;
+  backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--fgt-cursor-extra-menus-blur, 12px)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-menu-background) 15%,
+    transparent
+  ) !important;
+}
+
+/* --- noOpenTabsEmptyEditor (no settings; match editor.background tint) --- */
+.monaco-workbench .part.editor .editor-group-container.empty {
+  background: var(--vscode-editor-background) !important;
+  background-color: var(--vscode-editor-background) !important;
+}
+
+/* homeLaunchWindow: lighter tint than empty editor / open tabs */
+.monaco-workbench
+  .part.editor
+  .editor-group-container.empty:has(.editorCursorMainDiv) {
+  background: color-mix(
+    in srgb,
+    var(--vscode-editor-background) 45%,
+    transparent
+  ) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--vscode-editor-background) 45%,
+    transparent
+  ) !important;
+}
+
+/* --- homeLaunchWindow children stay clear over the shell tint --- */
+.monaco-workbench .part.editor .editor-group-container.empty .editorCursorMainDiv,
+.monaco-workbench
+  .part.editor
+  .editor-group-container.empty
+  .editorCursorMainDiv
+  > div {
+  background: transparent !important;
   background-color: transparent !important;
 }
 

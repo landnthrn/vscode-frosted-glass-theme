@@ -4,7 +4,12 @@
     "default": {
       "filter": "saturate(var(--fgt-saturate)) url(#fgt-acrylic-{key})",
       "disableBackgroundColor": true,
-      "opacity": 0.4
+      "opacity": 0.4,
+      "customAttrs": {
+        "feGaussianBlur": {
+          "stdDeviation": 30
+        }
+      }
     },
     "minimap": "blur(30px)",
     "decorationsOverviewRuler": "blur(30px)",
@@ -106,7 +111,7 @@
   },
   "cursor": {
     "chatPaneBackground": "#11111133",
-    "agentSidebarBackground": "#1f1f1f0D",
+    "agentSidePanelBackground": "#1f1f1f0D",
     "sidebarIconBarBackground": "#1f1f1f4d",
     "sentMessageBubbleBackground": "#00000000",
     "sentMessageBubbleBlur": "8px",
@@ -114,6 +119,6 @@
     "mentionMenuBlur": "8px",
     "modePickerMenuBlur": "6px",
     "modelPickerMenuBlur": "6px",
-    "chatRightClickMenuBlur": "4px"
+    "extraCursorMenusBlur": "4px"
   }
 }

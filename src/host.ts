@@ -78,7 +78,7 @@ const CURSOR_ADDITIONAL_STYLE_DEFAULTS = {
 
 const CURSOR_TARGETED_DEFAULTS = {
   chatPaneBackground: "#11111133",
-  agentSidebarBackground: "#1f1f1f0D",
+  agentSidePanelBackground: "#1f1f1f0D",
   sidebarIconBarBackground: "#1f1f1f4d",
   sentMessageBubbleBackground: "#00000000",
   sentMessageBubbleBlur: "8px",
@@ -86,7 +86,7 @@ const CURSOR_TARGETED_DEFAULTS = {
   mentionMenuBlur: "8px",
   modePickerMenuBlur: "6px",
   modelPickerMenuBlur: "6px",
-  chatRightClickMenuBlur: "4px",
+  extraCursorMenusBlur: "4px",
 };
 
 function isLegacyFlatCursorObject(value: Record<string, unknown>): boolean {
@@ -250,8 +250,20 @@ export function applyCursorInjectDefaults(
   delete overrides.generalMenuBlur;
 
   overrides.chatPaneBackground ??= CURSOR_TARGETED_DEFAULTS.chatPaneBackground;
-  overrides.agentSidebarBackground ??=
-    CURSOR_TARGETED_DEFAULTS.agentSidebarBackground;
+  // Legacy key from older Cursor defaults
+  if (
+    overrides.agentSidePanelBackground === undefined &&
+    typeof (overrides as { agentSidebarBackground?: string })
+      .agentSidebarBackground === "string"
+  ) {
+    overrides.agentSidePanelBackground = (
+      overrides as { agentSidebarBackground: string }
+    ).agentSidebarBackground;
+  }
+  delete (overrides as { agentSidebarBackground?: string })
+    .agentSidebarBackground;
+  overrides.agentSidePanelBackground ??=
+    CURSOR_TARGETED_DEFAULTS.agentSidePanelBackground;
   overrides.sidebarIconBarBackground ??=
     CURSOR_TARGETED_DEFAULTS.sidebarIconBarBackground;
   overrides.sentMessageBubbleBackground ??=
@@ -264,9 +276,30 @@ export function applyCursorInjectDefaults(
     (overrides as { composerModeMenuBlur?: string }).composerModeMenuBlur ??
     CURSOR_TARGETED_DEFAULTS.modePickerMenuBlur;
   overrides.modelPickerMenuBlur ??= CURSOR_TARGETED_DEFAULTS.modelPickerMenuBlur;
-  overrides.chatRightClickMenuBlur ??=
-    (overrides as { chatContextMenuBlur?: string }).chatContextMenuBlur ??
-    CURSOR_TARGETED_DEFAULTS.chatRightClickMenuBlur;
+  // Legacy keys → extraCursorMenusBlur
+  if (
+    overrides.extraCursorMenusBlur === undefined &&
+    typeof (overrides as { chatRightClickMenuBlur?: string })
+      .chatRightClickMenuBlur === "string"
+  ) {
+    overrides.extraCursorMenusBlur = (
+      overrides as { chatRightClickMenuBlur: string }
+    ).chatRightClickMenuBlur;
+  }
+  if (
+    overrides.extraCursorMenusBlur === undefined &&
+    typeof (overrides as { chatContextMenuBlur?: string }).chatContextMenuBlur ===
+      "string"
+  ) {
+    overrides.extraCursorMenusBlur = (
+      overrides as { chatContextMenuBlur: string }
+    ).chatContextMenuBlur;
+  }
+  delete (overrides as { chatRightClickMenuBlur?: string })
+    .chatRightClickMenuBlur;
+  delete (overrides as { chatContextMenuBlur?: string }).chatContextMenuBlur;
+  overrides.extraCursorMenusBlur ??=
+    CURSOR_TARGETED_DEFAULTS.extraCursorMenusBlur;
 
   writeCursorTargetedOverridesForInject(settings, overrides);
 

@@ -21,6 +21,18 @@
             "opacity": {
               "type": "number"
             },
+            "customAttrs": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Custom attributes to be applied to tint svgs. Key is css selector, value is a map of attributes.",
+              "patternProperties": {
+                ".*": {
+                  "type": "object"
+                }
+              }
+            },
             "acrylicBlur": {
               "type": "number",
               "description": "Inject runtime: feGaussianBlur stdDeviation for this surface's acrylic SVG (set from cursor.additional.style *Blur on Apply Config)."
@@ -266,9 +278,9 @@
           "type": "string",
           "description": "Chat / composer panel background."
         },
-        "agentSidebarBackground": {
+        "agentSidePanelBackground": {
           "type": "string",
-          "description": "Agent sidebar panel background."
+          "description": "Agent side panel background."
         },
         "sidebarIconBarBackground": {
           "type": "string",
@@ -304,11 +316,15 @@
         },
         "chatContextMenuBlur": {
           "type": "string",
-          "description": "Deprecated. Use chatRightClickMenuBlur."
+          "description": "Deprecated. Use extraCursorMenusBlur."
         },
         "chatRightClickMenuBlur": {
           "type": "string",
-          "description": "Cursor only. Backdrop blur for agent chat message right-click (portaled context-view; not covered by filter.menu). Color: menu.background. Editor/sidebar menus use generalMenuBlur."
+          "description": "Deprecated. Use extraCursorMenusBlur."
+        },
+        "extraCursorMenusBlur": {
+          "type": "string",
+          "description": "Cursor only. Shared backdrop blur for agent chat right-click menus, agent side panel right-click, sidebar icon bar dropdown, and code-changes chat preview boxes. Color: menu.background."
         }
       }
     }

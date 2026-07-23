@@ -46,66 +46,227 @@ export function applySlashMenuBlur() {
   `);
 }
 
-/** Unique first-pass menu item labels per agent-chat right-click variant (dev-tools). */
-const CHAT_RC_MENU_ITEM_LABELS = [
-  "Copy Message", // message bubble RC
-  "Search with Google", // highlighted text in agent message RC
-  "Add to Chat", // file mention in agent message RC
-] as const;
+/**
+ * Shared blur for extra Cursor menus / cards (`extraCursorMenusBlur`):
+ * - chatRC (Transcript / File actions ui-menu)
+ * - agentSidePanelRC (Monaco context-view in shadow root; Pin / Fork Chat)
+ * - sidebarIconBarDropDown
+ * - codeChangesChatPreviewBoxes
+ */
+const EXTRA_MENUS_BLUR_VAR = "--fgt-cursor-extra-menus-blur";
 
-function chatRcMenuHasSelector(label: string) {
-  return `.context-view.monaco-menu-container:has(.action-label[aria-label="${label}"])`;
-}
-
-/** Padding/gap below agent message text — Copy + Select All, not Copy Message. */
-const CHAT_RC_MESSAGE_GAP_SELECTOR = css`
-  .context-view.monaco-menu-container:has(
-      .action-label[aria-label="Copy"]
-    ):has(.action-label[aria-label="Select All"]):not(
-      :has(.action-label[aria-label="Cut"])
-    ):not(:has(.action-label[aria-label="Copy Message"])):not(
-      :has(.action-label[aria-label="Search with Google"])
-    ):not(:has(.action-label[aria-label="Add to Chat"]))
+const CHAT_RC_MENU_SELECTOR = css`
+  .ui-menu[role="menu"]:has([aria-label="Transcript actions"]),
+  .ui-menu[role="menu"]:has([aria-label="File actions"])
 `;
 
-const CHAT_RIGHTCLICK_MENU_SELECTOR = [
-  ...CHAT_RC_MENU_ITEM_LABELS.map(chatRcMenuHasSelector),
-  CHAT_RC_MESSAGE_GAP_SELECTOR,
-].join(",\n");
+const CHAT_RC_INNER_CLEAR_SELECTOR = css`
+  ${CHAT_RC_MENU_SELECTOR} .ui-scroll-area__content,
+  ${CHAT_RC_MENU_SELECTOR} .ui-menu__content,
+  ${CHAT_RC_MENU_SELECTOR} .ui-menu__layout
+`;
 
-/**
- * Portaled chat right-click blur — rules in adoptedStyleSheet (like slash menu).
- * Link CSS alone is not reliable for body-portaled context-view menus.
- */
-export function applyChatRightClickMenuBlur() {
+/** agentSidePanelRC — unique labels Pin + Fork Chat */
+const AGENT_SIDE_PANEL_RC_SELECTOR = css`
+  .context-view.monaco-menu-container:has(
+      .action-label[aria-label="Fork Chat"]
+    ),
+  .monaco-menu-container:has(.action-label[aria-label="Fork Chat"])
+`;
+
+const SIDEBAR_ICON_BAR_DROPDOWN_SELECTOR = css`
+  .monaco-workbench
+    .part.sidebar
+    div[style*="position: absolute"]:has(.sidebar-list-item)
+`;
+
+const CODE_CHANGES_PREVIEW_SELECTOR = css`
+  .ui-tool-call-card.ui-edit-tool-call[data-tool-call-card-marker="root"]
+`;
+
+/** Insert adoptedStyleSheet rules for portaled / late extra menus. */
+export function applyExtraCursorMenusBlur() {
   fgtSheet.insertRule(css`
-    ${CHAT_RIGHTCLICK_MENU_SELECTOR} {
+    ${CHAT_RC_MENU_SELECTOR} {
       contain: none !important;
       isolation: auto !important;
-    }
-  `);
-  fgtSheet.insertRule(css`
-    ${CHAT_RIGHTCLICK_MENU_SELECTOR} .monaco-action-bar,
-    ${CHAT_RIGHTCLICK_MENU_SELECTOR} .monaco-menu > div {
-      contain: none !important;
-      isolation: auto !important;
-      backdrop-filter: blur(
-        var(--fgt-cursor-chat-rightclick-menu-blur, 12px)
-      ) !important;
-      -webkit-backdrop-filter: blur(
-        var(--fgt-cursor-chat-rightclick-menu-blur, 12px)
-      ) !important;
+      backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
+      -webkit-backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
       background-color: var(--vscode-menu-background) !important;
     }
   `);
   fgtSheet.insertRule(css`
-    ${CHAT_RIGHTCLICK_MENU_SELECTOR} .monaco-scrollable-element {
+    ${CHAT_RC_INNER_CLEAR_SELECTOR} {
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       background-color: transparent !important;
     }
   `);
+  fgtSheet.insertRule(css`
+    ${AGENT_SIDE_PANEL_RC_SELECTOR} {
+      contain: none !important;
+      isolation: auto !important;
+    }
+  `);
+  fgtSheet.insertRule(css`
+    ${AGENT_SIDE_PANEL_RC_SELECTOR} .monaco-scrollable-element {
+      contain: none !important;
+      isolation: auto !important;
+      backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
+      -webkit-backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
+      background-color: var(--vscode-menu-background) !important;
+    }
+  `);
+  fgtSheet.insertRule(css`
+    ${SIDEBAR_ICON_BAR_DROPDOWN_SELECTOR} {
+      contain: none !important;
+      isolation: auto !important;
+      backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
+      -webkit-backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
+      background-color: var(--vscode-menu-background) !important;
+    }
+  `);
+  fgtSheet.insertRule(css`
+    ${CODE_CHANGES_PREVIEW_SELECTOR} {
+      contain: none !important;
+      isolation: auto !important;
+      --ui-tool-call-card-bg: transparent;
+      backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
+      -webkit-backdrop-filter: blur(var(${EXTRA_MENUS_BLUR_VAR}, 12px)) !important;
+      background-color: color-mix(
+        in srgb,
+        var(--vscode-menu-background) 15%,
+        transparent
+      ) !important;
+    }
+  `);
 }
+
+const CHAT_RC_QUERY =
+  '.ui-menu[role="menu"]:has([aria-label="Transcript actions"]), .ui-menu[role="menu"]:has([aria-label="File actions"])';
+const AGENT_SIDE_PANEL_RC_QUERY =
+  '.context-view.monaco-menu-container:has(.action-label[aria-label="Fork Chat"]), .monaco-menu-container:has(.action-label[aria-label="Fork Chat"])';
+const SIDEBAR_DROPDOWN_QUERY =
+  '.monaco-workbench .part.sidebar div[style*="position: absolute"]:has(.sidebar-list-item)';
+
+const extraMenusWatched = new WeakSet<HTMLElement>();
+let extraMenusPollId: ReturnType<typeof setInterval> | undefined;
+
+function applyExtraMenuGlass(
+  el: HTMLElement,
+  opts: {
+    clearInners?: string;
+    /** When set, blur paints on this child (re-queried each pass). */
+    blurChildSelector?: string;
+    /** Override background (default: menu.background). */
+    background?: string;
+  } = {}
+) {
+  const blur = readCssVar(EXTRA_MENUS_BLUR_VAR, "12px");
+  const bg =
+    opts.background ??
+    readCssVar(
+      "--vscode-menu-background",
+      "var(--vscode-menu-background)"
+    );
+  const child = opts.blurChildSelector
+    ? el.querySelector(opts.blurChildSelector)
+    : null;
+  const target =
+    child instanceof HTMLElement ? child : el;
+
+  el.style.setProperty("contain", "none", "important");
+  el.style.setProperty("isolation", "auto", "important");
+  target.style.setProperty("contain", "none", "important");
+  target.style.setProperty("isolation", "auto", "important");
+  target.style.setProperty("backdrop-filter", `blur(${blur})`, "important");
+  target.style.setProperty(
+    "-webkit-backdrop-filter",
+    `blur(${blur})`,
+    "important"
+  );
+  target.style.setProperty("background-color", bg, "important");
+
+  if (opts.clearInners) {
+    el.querySelectorAll(opts.clearInners).forEach(node => {
+      if (!(node instanceof HTMLElement)) return;
+      node.style.setProperty("backdrop-filter", "none", "important");
+      node.style.setProperty("-webkit-backdrop-filter", "none", "important");
+      node.style.setProperty("background-color", "transparent", "important");
+    });
+  }
+
+  if (!extraMenusWatched.has(el)) {
+    extraMenusWatched.add(el);
+    new MutationObserver(() => applyExtraMenuGlass(el, opts)).observe(el, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+      subtree: true,
+    });
+  }
+}
+
+function scanExtraMenus(root: ParentNode) {
+  root.querySelectorAll(CHAT_RC_QUERY).forEach(node => {
+    if (!(node instanceof HTMLElement)) return;
+    applyExtraMenuGlass(node, {
+      clearInners: ".ui-scroll-area__content, .ui-menu__content, .ui-menu__layout",
+    });
+  });
+  root.querySelectorAll(AGENT_SIDE_PANEL_RC_QUERY).forEach(node => {
+    if (!(node instanceof HTMLElement)) return;
+    applyExtraMenuGlass(node, {
+      blurChildSelector: ".monaco-scrollable-element",
+    });
+  });
+  root.querySelectorAll(SIDEBAR_DROPDOWN_QUERY).forEach(node => {
+    if (node instanceof HTMLElement) applyExtraMenuGlass(node);
+  });
+  root
+    .querySelectorAll(
+      ".ui-tool-call-card.ui-edit-tool-call[data-tool-call-card-marker='root']"
+    )
+    .forEach(node => {
+      if (!(node instanceof HTMLElement)) return;
+      applyExtraMenuGlass(node, {
+        background:
+          "color-mix(in srgb, var(--vscode-menu-background) 15%, transparent)",
+      });
+    });
+}
+
+function scanAllExtraMenus() {
+  scanExtraMenus(document);
+  document.querySelectorAll("*").forEach(el => {
+    if (el.shadowRoot) scanExtraMenus(el.shadowRoot);
+  });
+
+  const open =
+    document.querySelector(CHAT_RC_QUERY) ||
+    document.querySelector(SIDEBAR_DROPDOWN_QUERY) ||
+    [...document.querySelectorAll("*")].some(el =>
+      el.shadowRoot?.querySelector(AGENT_SIDE_PANEL_RC_QUERY)
+    );
+  if (open && extraMenusPollId === undefined) {
+    extraMenusPollId = setInterval(scanAllExtraMenus, 150);
+  } else if (!open && extraMenusPollId !== undefined) {
+    clearInterval(extraMenusPollId);
+    extraMenusPollId = undefined;
+  }
+}
+
+export function startExtraCursorMenusBlur() {
+  scanAllExtraMenus();
+  new MutationObserver(scanAllExtraMenus).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+/** @deprecated Use applyExtraCursorMenusBlur */
+export const applyChatRightClickMenuBlur = applyExtraCursorMenusBlur;
+/** @deprecated Use startExtraCursorMenusBlur */
+export const startChatRightClickMenuBlur = startExtraCursorMenusBlur;
 
 function readCssVar(name: string, fallback: string): string {
   const v = getComputedStyle(document.documentElement)

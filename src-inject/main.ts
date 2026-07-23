@@ -17,9 +17,10 @@ import "./animation";
 import "./borderRadius";
 import "./miscellaneous";
 import {
-  applyChatRightClickMenuBlur,
+  applyExtraCursorMenusBlur,
   applySlashMenuBlur,
   hideCorruptNotifications,
+  startExtraCursorMenusBlur,
   startModelPickerBlur,
 } from "./cursor-targeted-overrides";
 import { useHTMLElement } from "./utils/proxy";
@@ -77,7 +78,7 @@ document.adoptedStyleSheets.push(fgtSheet);
 
 type CursorPanelConfig = {
   chatPaneBackground?: string;
-  agentSidebarBackground?: string;
+  agentSidePanelBackground?: string;
   sidebarIconBarBackground?: string;
   sentMessageBubbleBackground?: string;
   sentMessageBubbleBlur?: string;
@@ -86,7 +87,10 @@ type CursorPanelConfig = {
   modePickerMenuBlur?: string;
   composerModeMenuBlur?: string;
   modelPickerMenuBlur?: string;
+  extraCursorMenusBlur?: string;
+  /** @deprecated Migrated to extraCursorMenusBlur */
   chatRightClickMenuBlur?: string;
+  /** @deprecated Migrated to extraCursorMenusBlur */
   chatContextMenuBlur?: string;
 };
 
@@ -101,8 +105,11 @@ if (runtime?.host === "cursor" && cursorPanels) {
   const cursorVariables = {
     "fgt-cursor-chat-pane-background":
       cursorPanels.chatPaneBackground ?? "#11111133",
-    "fgt-cursor-agent-sidebar-background":
-      cursorPanels.agentSidebarBackground ?? "#1f1f1f0D",
+    "fgt-cursor-agent-sidepanel-background":
+      cursorPanels.agentSidePanelBackground ??
+      (cursorPanels as { agentSidebarBackground?: string })
+        .agentSidebarBackground ??
+      "#1f1f1f0D",
     "fgt-cursor-sidebar-iconbar-background":
       cursorPanels.sidebarIconBarBackground ?? "#1f1f1f4d",
     "fgt-cursor-sent-message-bubble-background":
@@ -118,7 +125,8 @@ if (runtime?.host === "cursor" && cursorPanels) {
     "fgt-cursor-model-picker-menu-blur":
       cursorPanels.modelPickerMenuBlur ?? "6px",
     ...QUIT_CONFIRMATION_LOOK,
-    "fgt-cursor-chat-rightclick-menu-blur":
+    "fgt-cursor-extra-menus-blur":
+      cursorPanels.extraCursorMenusBlur ??
       cursorPanels.chatRightClickMenuBlur ??
       cursorPanels.chatContextMenuBlur ??
       "4px",
@@ -137,9 +145,9 @@ if (runtime?.host === "cursor" && cursorPanels) {
     console.error("Frosted Glass Theme: slash menu blur CSS failed", e);
   }
   try {
-    applyChatRightClickMenuBlur();
+    applyExtraCursorMenusBlur();
   } catch (e) {
-    console.error("Frosted Glass Theme: chat right-click menu blur failed", e);
+    console.error("Frosted Glass Theme: extra Cursor menus blur CSS failed", e);
   }
 }
 
@@ -148,6 +156,14 @@ if (runtime?.host === "cursor") {
     startModelPickerBlur();
   } catch (e) {
     console.error("Frosted Glass Theme: model picker blur failed", e);
+  }
+  try {
+    startExtraCursorMenusBlur();
+  } catch (e) {
+    console.error(
+      "Frosted Glass Theme: extra Cursor menus observer failed",
+      e
+    );
   }
   try {
     applyEffect(document.body);
@@ -186,9 +202,7 @@ proxy(
   Element.prototype,
   "attachShadow",
   useRet(shadowDom => {
-    shadowDom.adoptedStyleSheets.push(
-      ...shadowDom.ownerDocument.adoptedStyleSheets
-    );
+    shadowDom.adoptedStyleSheets.push(fgtSheet);
     applyBackdropFilterOnShadowDOM(shadowDom, mountTintSvgTo);
     applyEffect(shadowDom);
     proxy(

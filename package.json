@@ -8,10 +8,14 @@
   },
   "publisher": "RichardLuo",
   "description": "Bring frosted glass menu (like windows acrylic or mac os) to your vscode or cursor!",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/landnthrn/vscode-cursor-frosted-glass-theme"
+  },
+  "upstream-repository": {
+    "type": "git",
+    "url": "https://github.com/RichardLuo0/vscode-frosted-glass-theme"
   },
   "license": "MIT",
   "engines": {
@@ -73,7 +77,7 @@
       },
       {
         "command": "frosted-glass-theme.openConfig",
-        "title": "Frosted Glass Theme: Open Config (readonly)"
+        "title": "Frosted Glass Theme: Open Config"
       },
       {
         "command": "frosted-glass-theme.generateThemeMod",
@@ -104,6 +108,18 @@
                   "opacity": {
                     "type": "number"
                   },
+                  "customAttrs": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "description": "Custom attributes to be applied to tint svgs. Key is css selector, value is a map of attributes.",
+                    "patternProperties": {
+                      ".*": {
+                        "type": "object"
+                      }
+                    }
+                  },
                   "acrylicBlur": {
                     "type": "number",
                     "description": "Inject runtime: feGaussianBlur stdDeviation for this surface's acrylic SVG (set from cursor.additional.style *Blur on Apply Config)."
@@ -115,7 +131,12 @@
               "default": {
                 "filter": "saturate(var(--fgt-saturate)) url(#fgt-acrylic-{key})",
                 "disableBackgroundColor": true,
-                "opacity": 0.4
+                "opacity": 0.4,
+                "customAttrs": {
+                  "feGaussianBlur": {
+                    "stdDeviation": 30
+                  }
+                }
               },
               "minimap": "blur(30px)",
               "decorationsOverviewRuler": "blur(30px)",
@@ -447,7 +468,7 @@
             "description": "Cursor only. Panel backgrounds (#RRGGBBAA hex) and backdrop blur for agent chat surfaces.",
             "default": {
               "chatPaneBackground": "#11111133",
-              "agentSidebarBackground": "#1f1f1f0D",
+              "agentSidePanelBackground": "#1f1f1f0D",
               "sidebarIconBarBackground": "#1f1f1f4d",
               "sentMessageBubbleBackground": "#00000000",
               "sentMessageBubbleBlur": "8px",
@@ -455,16 +476,16 @@
               "mentionMenuBlur": "8px",
               "modePickerMenuBlur": "6px",
               "modelPickerMenuBlur": "6px",
-              "chatRightClickMenuBlur": "4px"
+              "extraCursorMenusBlur": "4px"
             },
             "properties": {
               "chatPaneBackground": {
                 "type": "string",
                 "description": "Chat / composer panel background."
               },
-              "agentSidebarBackground": {
+              "agentSidePanelBackground": {
                 "type": "string",
-                "description": "Agent sidebar panel background."
+                "description": "Agent side panel background."
               },
               "sidebarIconBarBackground": {
                 "type": "string",
@@ -500,11 +521,15 @@
               },
               "chatContextMenuBlur": {
                 "type": "string",
-                "description": "Deprecated. Use chatRightClickMenuBlur."
+                "description": "Deprecated. Use extraCursorMenusBlur."
               },
               "chatRightClickMenuBlur": {
                 "type": "string",
-                "description": "Cursor only. Backdrop blur for agent chat message right-click (portaled context-view; not covered by filter.menu). Color: menu.background. Editor/sidebar menus use generalMenuBlur."
+                "description": "Deprecated. Use extraCursorMenusBlur."
+              },
+              "extraCursorMenusBlur": {
+                "type": "string",
+                "description": "Cursor only. Shared backdrop blur for agent chat right-click menus, agent side panel right-click, sidebar icon bar dropdown, and code-changes chat preview boxes. Color: menu.background."
               }
             }
           }
