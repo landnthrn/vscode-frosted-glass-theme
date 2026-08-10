@@ -170,8 +170,12 @@ div[tabindex="0"]:has(.composer-unified-context-menu-item) {
 
 /* --- model picker --- */
 /* modelPickerMenuBlur; color: dropdown.background */
+/* selected-auto-menu = initial popup; selected-model-list-submenu = model list;
+   preview-card-layer-popup = hover model-info panel */
 
-div[data-testid="model-picker-menu"] {
+div[data-testid="selected-auto-menu"],
+div[data-testid="selected-model-list-submenu"],
+div[data-component="preview-card-layer-popup"] {
   contain: none !important;
   isolation: auto !important;
   backdrop-filter: blur(var(--fgt-cursor-model-picker-menu-blur, 12px));
@@ -180,7 +184,9 @@ div[data-testid="model-picker-menu"] {
   background-color: var(--vscode-dropdown-background) !important;
 }
 
-div[data-testid="model-picker-menu"] .ui-scroll-area__content {
+div[data-testid="selected-auto-menu"] .ui-scroll-area__content,
+div[data-testid="selected-model-list-submenu"] .ui-scroll-area__content,
+div[data-component="preview-card-layer-popup"] .ui-scroll-area__content {
   background: transparent !important;
   background-color: transparent !important;
 }
@@ -288,8 +294,10 @@ div[data-testid="model-picker-menu"] .ui-scroll-area__content {
 /* --- composer menu row hover (list.hoverBackground) + reveal on focused/selected rows --- */
 
 .ui-menu.ui-slash-menu__content[role="menu"] .ui-menu__row[data-focused="true"],
-[data-testid="model-picker-menu"] .ui-menu__row[data-focused="true"],
-[data-testid="model-picker-menu"] .ui-menu__toggle-row[data-focused="true"] {
+[data-testid="selected-auto-menu"] .ui-menu__row[data-focused="true"],
+[data-testid="selected-auto-menu"] .ui-menu__toggle-row[data-focused="true"],
+[data-testid="selected-model-list-submenu"] .ui-menu__row[data-focused="true"],
+[data-testid="selected-model-list-submenu"] .ui-menu__toggle-row[data-focused="true"] {
   background-color: var(--vscode-list-hoverBackground) !important;
 }
 

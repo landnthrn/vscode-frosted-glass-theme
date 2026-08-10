@@ -3,8 +3,10 @@ import fgtSheet from "./vscode-frosted-glass-theme.css" with { type: "css" };
 
 const COMPOSER_UI_MENU_ROW_HOVER = css`
   .ui-menu.ui-slash-menu__content[role="menu"] .ui-menu__row[data-focused="true"],
-  [data-testid="model-picker-menu"] .ui-menu__row[data-focused="true"],
-  [data-testid="model-picker-menu"] .ui-menu__toggle-row[data-focused="true"] {
+  [data-testid="selected-auto-menu"] .ui-menu__row[data-focused="true"],
+  [data-testid="selected-auto-menu"] .ui-menu__toggle-row[data-focused="true"],
+  [data-testid="selected-model-list-submenu"] .ui-menu__row[data-focused="true"],
+  [data-testid="selected-model-list-submenu"] .ui-menu__toggle-row[data-focused="true"] {
     background-color: var(--vscode-list-hoverBackground) !important;
   }
 `;
@@ -20,8 +22,10 @@ const COMPOSER_UNIFIED_MENU_ROW_HOVER = css`
 
 const COMPOSER_MENU_REVEAL_ROWS = css`
   .ui-menu.ui-slash-menu__content[role="menu"] .ui-menu__row[data-focused="true"],
-  [data-testid="model-picker-menu"] .ui-menu__row[data-focused="true"],
-  [data-testid="model-picker-menu"] .ui-menu__toggle-row[data-focused="true"],
+  [data-testid="selected-auto-menu"] .ui-menu__row[data-focused="true"],
+  [data-testid="selected-auto-menu"] .ui-menu__toggle-row[data-focused="true"],
+  [data-testid="selected-model-list-submenu"] .ui-menu__row[data-focused="true"],
+  [data-testid="selected-model-list-submenu"] .ui-menu__toggle-row[data-focused="true"],
   div[tabindex="0"]:has(.composer-unified-context-menu-item)
     .composer-unified-context-menu-item[data-is-selected="true"],
   .typeahead-popover.mentions-menu
@@ -308,8 +312,12 @@ function applyToModelPickerMenu(menu: HTMLElement) {
   }
 }
 
+/** Initial Auto popup, model-list submenu, and hover model-info panel. */
+const MODEL_PICKER_SHELL =
+  '[data-testid="selected-auto-menu"], [data-testid="selected-model-list-submenu"], [data-component="preview-card-layer-popup"]';
+
 function scanModelPicker(root: ParentNode) {
-  root.querySelectorAll('[data-testid="model-picker-menu"]').forEach(node => {
+  root.querySelectorAll(MODEL_PICKER_SHELL).forEach(node => {
     if (node instanceof HTMLElement) applyToModelPickerMenu(node);
   });
 }
@@ -320,7 +328,7 @@ function scanAllModelPickerRoots() {
     if (el.shadowRoot) scanModelPicker(el.shadowRoot);
   });
 
-  const open = document.querySelector('[data-testid="model-picker-menu"]');
+  const open = document.querySelector(MODEL_PICKER_SHELL);
   if (open && pollId === undefined) {
     pollId = setInterval(scanAllModelPickerRoots, 150);
   } else if (!open && pollId !== undefined) {
