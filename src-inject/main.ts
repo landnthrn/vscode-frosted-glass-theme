@@ -1,21 +1,25 @@
+import { proxy, useArgs, useRet } from "../common/proxy";
+import config from "../config/config.json" with { type: "json" };
 import {
   applyBackdropFilter,
-  applyBackdropFilterOnShadowDOM,
+  applyBackdropFilterOnEntry,
+  menuEntry,
 } from "./backdropFilter";
-import config from "../config/config.json" with { type: "json" };
 import { applyEffect } from "./effect/effect";
+import { hookExtensionWebView } from "./extensionWebviewHook";
 import { applyFakeMica } from "./fakeMica";
 import { fixContextMenu, fixMenu, fixMenuBar } from "./fixMenu";
 import { loadSvgs } from "./utils/loadSvg";
 import { observeThemeColorChange } from "./utils/observeThemeColor";
-import { proxy, useRet } from "../common/proxy";
+import { useHTMLElement } from "./utils/proxy";
 import { css, makeAbsolutePath } from "./utils/utils";
 import fgtSheet from "./vscode-frosted-glass-theme.css" with { type: "css" };
+import { insertVariables } from "./variables";
 
-import "./opacity";
 import "./animation";
 import "./borderRadius";
 import "./miscellaneous";
+import "./opacity";
 import {
   applyExtraCursorMenusBlur,
   applySlashMenuBlur,
@@ -23,7 +27,6 @@ import {
   startExtraCursorMenusBlur,
   startModelPickerBlur,
 } from "./cursor-targeted-overrides";
-import { useHTMLElement } from "./utils/proxy";
 
 /** Fixed quit-dialog look — not in frosted-glass-theme.cursor.targetted.overrides settings. */
 const QUIT_CONFIRMATION_LOOK = {
@@ -57,19 +60,9 @@ for (const style of config.additionalStyle as string[]) {
   document.head.append(styleElement);
 }
 
-function insertVariables(cssSelector: string, variables: object) {
-  fgtSheet.insertRule(css`
-    ${cssSelector} {
-      ${Object.entries(variables).reduce((total, pair) => {
-        const [key, value] = pair;
-        return total + `--${key}: ${value};`;
-      }, "")}
-    }
-  `);
-}
-
-insertVariables('[role="application"]', config.variable);
+insertVariables(fgtSheet, '[role="application"]', config.variable);
 insertVariables(
+  fgtSheet,
   '[role="application"].vs-dark, [role="application"].hc-black',
   config.variableDark
 );
@@ -97,7 +90,7 @@ type CursorPanelConfig = {
 const cursorPanels = (config as { cursor?: CursorPanelConfig }).cursor;
 const runtime = (config as { runtime?: { host?: string } }).runtime;
 if (runtime?.host === "cursor") {
-  insertVariables('[role="application"]', {
+  insertVariables(fgtSheet, '[role="application"]', {
     "fgt-notifications-blur": readNotificationsBlurPx(),
   });
 }
@@ -132,8 +125,8 @@ if (runtime?.host === "cursor" && cursorPanels) {
       "4px",
   };
   // Portaled chat menus render outside [role="application"]; :root keeps vars visible.
-  insertVariables(":root", cursorVariables);
-  insertVariables('[role="application"]', cursorVariables);
+  insertVariables(fgtSheet, ":root", cursorVariables);
+  insertVariables(fgtSheet, '[role="application"]', cursorVariables);
   try {
     hideCorruptNotifications();
   } catch (e) {
@@ -203,7 +196,7 @@ proxy(
   "attachShadow",
   useRet(shadowDom => {
     shadowDom.adoptedStyleSheets.push(fgtSheet);
-    applyBackdropFilterOnShadowDOM(shadowDom, mountTintSvgTo);
+    applyBackdropFilterOnEntry(shadowDom, menuEntry, mountTintSvgTo);
     applyEffect(shadowDom);
     proxy(
       shadowDom,
@@ -239,5 +232,16 @@ proxy(
       })
     );
     return ownWindow;
+  })
+);
+
+proxy(
+  HTMLIFrameElement.prototype,
+  "setAttribute",
+  useArgs(function (qualifiedName: string, value: string) {
+    if (qualifiedName !== "src") return;
+    const extensionId = value.match(/[?&]extensionId=([^&]+)/)?.[1];
+    if (!extensionId) return;
+    hookExtensionWebView(this, extensionId, mountTintSvgTo);
   })
 );

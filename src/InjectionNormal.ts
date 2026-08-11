@@ -27,7 +27,7 @@ class HtmlPatcher implements Patcher {
       .replace(
         /(<\/html>)/,
         `<!-- !! VSCODE-FROSTED-GLASS-THEME-SESSION-ID ${uuid} !! -->\n` +
-          `<!-- !! VSCODE-FROSTED-GLASS-THEME-START !! -->\n${injection}\n<!-- !! VSCODE-FROSTED-GLASS-THEME-END !! -->\n</html>`
+          `<!-- !! VSCODE-FROSTED-GLASS-THEME-START !! -->\n${injection}<!-- !! VSCODE-FROSTED-GLASS-THEME-END !! -->\n</html>`
       );
 
     await fs.promises.writeFile(this.file, content, "utf-8");
@@ -47,11 +47,11 @@ class HtmlPatcher implements Patcher {
   protected clearExistingPatches(content: string) {
     return content
       .replace(
-        /<!-- !! VSCODE-FROSTED-GLASS-THEME-START !! -->[\s\S]*?<!-- !! VSCODE-FROSTED-GLASS-THEME-END !! -->\n*/,
+        /<!-- !! VSCODE-FROSTED-GLASS-THEME-START !! -->[\s\S]*?<!-- !! VSCODE-FROSTED-GLASS-THEME-END !! -->\r?\n*/,
         ""
       )
       .replace(
-        /<!-- !! VSCODE-FROSTED-GLASS-THEME-SESSION-ID [\w-]+ !! -->\n*/g,
+        /<!-- !! VSCODE-FROSTED-GLASS-THEME-SESSION-ID [\w-]+ !! -->\r?\n*/g,
         ""
       );
   }
@@ -60,7 +60,7 @@ class HtmlPatcher implements Patcher {
     let res = "";
     for (const item of files) {
       const imp = this.computeInjectedHTMLItem(item);
-      if (imp) res += imp;
+      if (imp) res += imp + "\n";
     }
     return res;
   }
@@ -87,13 +87,13 @@ class JsPatcher implements Patcher {
   constructor(private file: string) {}
 
   async patch(uuid: string, files: string[]) {
-    const injection = this.computeInjectedHTML(files);
+    const injection = this.computeInjectedJs(files);
 
     let content = fs.readFileSync(this.file, "utf-8");
     content = this.clearExistingPatches(content);
 
     content =
-      `//VSCODE-FROSTED-GLASS-THEME-SESSION-ID ${uuid}\n//VSCODE-FROSTED-GLASS-THEME-START\n${injection}\n//VSCODE-FROSTED-GLASS-THEME-END\n` +
+      `//VSCODE-FROSTED-GLASS-THEME-SESSION-ID ${uuid}\n//VSCODE-FROSTED-GLASS-THEME-START\n${injection}//VSCODE-FROSTED-GLASS-THEME-END\n` +
       content;
 
     await fs.promises.writeFile(this.file, content, "utf-8");
@@ -103,7 +103,7 @@ class JsPatcher implements Patcher {
     if (fs.existsSync(this.file)) {
       const content = await fs.promises.readFile(this.file, "utf-8");
       const m = content.match(
-        /\/\/VSCODE-FROSTED-GLASS-THEME-SESSION-ID ([0-9a-fA-F-]+)\n/
+        /\/\/VSCODE-FROSTED-GLASS-THEME-SESSION-ID ([0-9a-fA-F-]+)\r?\n/
       );
       if (!m) return undefined;
       else return m[1];
@@ -114,26 +114,31 @@ class JsPatcher implements Patcher {
   protected clearExistingPatches(content: string) {
     return content
       .replace(
-        /\/\/VSCODE-FROSTED-GLASS-THEME-START\n[\s\S]*?\/\/VSCODE-FROSTED-GLASS-THEME-END\n/,
+        /\/\/VSCODE-FROSTED-GLASS-THEME-START\r?\n[\s\S]*?\/\/VSCODE-FROSTED-GLASS-THEME-END\r?\n/,
         ""
       )
-      .replace(/\/\/VSCODE-FROSTED-GLASS-THEME-SESSION-ID [\w-]+\n/g, "");
+      .replace(/\/\/VSCODE-FROSTED-GLASS-THEME-SESSION-ID [\w-]+\r?\n/g, "");
   }
 
-  protected computeInjectedHTML(files: string[]) {
-    let res = "";
+  protected computeInjectedJs(files: string[]) {
+    let res = "try {\n";
     for (const item of files) {
-      const imp = this.computeInjectedHTMLItem(item);
-      if (imp) res += imp;
+      const imp = this.computeInjectedJsItem(item);
+      if (imp) res += imp + "\n";
     }
-    return res;
+    return (
+      res +
+      `} catch(err) {
+  console.error('failed to load frosted glass theme main patch: ', err);
+};\n`
+    );
   }
 
-  protected computeInjectedHTMLItem(url: string) {
+  protected computeInjectedJsItem(url: string) {
     url =
       "file://" +
       (process.platform === "win32" ? "/" + url : url).replace(/\\/g, "/");
-    return `import "${url}";`;
+    return `await import("${url}");`;
   }
 }
 

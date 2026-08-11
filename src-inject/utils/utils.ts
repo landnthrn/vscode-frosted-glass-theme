@@ -1,5 +1,8 @@
 export function isHTMLElement<T>(a: T): a is HTMLElement & T {
-  return a && a instanceof HTMLElement;
+  if (!(a instanceof Node)) return false;
+  const win = a?.ownerDocument?.defaultView;
+  if (!win) return false;
+  return a && a instanceof win.HTMLElement;
 }
 
 export function isHTMLElementWithClass<T>(
@@ -73,9 +76,9 @@ export function applyOpacity(color: string, opacity: number) {
 
 export function extractOpacity(
   color: string,
-  opacity: number | undefined
+  fallbackOpacity: number | undefined
 ): [string, number] {
-  const fallback = opacity ?? 1;
+  const fallback = fallbackOpacity ?? 1;
   color = color.trim();
   if (color.startsWith("#"))
     if (color.length === 9)

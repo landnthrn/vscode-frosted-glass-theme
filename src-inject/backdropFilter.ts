@@ -7,9 +7,9 @@ import fgtSheet from "./vscode-frosted-glass-theme.css" with { type: "css" };
 const { filter } = config;
 
 // [key, colorVar, cssSelector]
-type Entry = [string, string | undefined, string];
+export type Entry = [string, string | undefined, string];
 
-const menuEntry: Entry = [
+export const menuEntry: Entry = [
   "menu",
   "--vscode-menu-background",
   ".monaco-menu-container .monaco-scrollable-element",
@@ -164,24 +164,33 @@ function getFilter(key: string) {
   return filterMap[key] ?? filterMap.default;
 }
 
-entryList.forEach(entry => {
-  const filter = getFilter(entry[0]);
+export function getFilterWithKey(key: string) {
+  const filter = getFilter(key);
+  if (!filter) return undefined;
+  const filterCopy = { ...filter };
+  filterCopy.filter = filterCopy.filter.replaceAll("{key}", key);
+  return filterCopy;
+}
+
+export function applyBackdropFilterOnSheet(sheet: CSSStyleSheet, entry: Entry) {
+  const filter = getFilterWithKey(entry[0]);
   if (filter === undefined) return;
-  const filterStr = filter.filter.replaceAll("{key}", entry[0]);
-  fgtSheet.insertRule(css`
+  sheet.insertRule(css`
     ${entry[2]} {
-      backdrop-filter: ${filterStr};
+      backdrop-filter: ${filter.filter};
       background-color: ${filter.disableBackgroundColor
         ? "transparent"
         : `var(--fgt-${entry[0]}-background)`} !important;
     }
   `);
-});
+}
 
-async function applyBackdropFilterOnEntry(
+entryList.forEach(entry => applyBackdropFilterOnSheet(fgtSheet, entry));
+
+export async function applyBackdropFilterOnEntry(
   element: Node & ParentNode,
   entry: Entry,
-  mountSvgTo: MountSvgTo
+  mountTintSvgTo: MountSvgTo
 ) {
   const wrapper = document.createElement("div");
   const colorVar = entry[1];
@@ -196,10 +205,13 @@ async function applyBackdropFilterOnEntry(
         );
       // Bind color to svg
       const [solid, opacity] = extractOpacity(color, filterOpacity);
-      wrapper.style.setProperty("--fgt-current-background", solid);
+      wrapper.style.setProperty(
+        "--fgt-current-background",
+        solid.length === 0 ? `var(${colorVar})` : solid
+      );
       wrapper.style.setProperty("--fgt-current-opacity", `${opacity * 100}%`);
     });
-  await mountSvgTo(wrapper, true);
+  await mountTintSvgTo(wrapper, true);
 
   wrapper
     .querySelectorAll("filter")
@@ -229,18 +241,11 @@ async function applyBackdropFilterOnEntry(
 
 export function applyBackdropFilter(
   element: HTMLElement,
-  mountSvgTo: MountSvgTo
+  mountTintSvgTo: MountSvgTo
 ) {
   const wrapper = document.createElement("div");
   entryList.forEach(entry =>
-    applyBackdropFilterOnEntry(wrapper, entry, mountSvgTo)
+    applyBackdropFilterOnEntry(wrapper, entry, mountTintSvgTo)
   );
   element.appendChild(wrapper);
-}
-
-export function applyBackdropFilterOnShadowDOM(
-  element: Node & ParentNode,
-  mountSvgTo: MountSvgTo
-) {
-  applyBackdropFilterOnEntry(element, menuEntry, mountSvgTo);
 }

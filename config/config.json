@@ -99,6 +99,7 @@
     "titlebarFix": 0.8,
     "editorBackgroundFix": true
   },
+  "extensionWebviewPatch": [],
   "miscellaneous": {
     "progressBarBehindSectionHeader": false,
     "disableFocusOutline": false

@@ -1,60 +1,21 @@
-import fs from "fs";
 import { readFile } from "fs/promises";
-import { resolve } from "path";
-import { commands, ExtensionContext, Uri, window, workspace } from "vscode";
+import path from "path";
+import {
+  commands,
+  ConfigurationTarget,
+  env,
+  ExtensionContext,
+  Uri,
+  window,
+  workspace,
+} from "vscode";
 import { resolveFakeMicaUrlForInject } from "./fakeMicaUrl";
 import { generateThemeMod as generateThemeModFunc } from "./generateThemeMod";
 import { applyCursorInjectDefaults, getHostId, isCursor } from "./host";
 import { localize } from "./localization";
 import { setup as setupFunc } from "./setup";
 import ThemeInjection from "./ThemeInjection";
-import { showChoiceMessage } from "./utils";
-
-class File {
-  static editor = class {
-    private content: string | null = null;
-
-    constructor(private file: File) {}
-
-    loadContent() {
-      if (this.content === null)
-        this.content = fs.readFileSync(this.file.path, "utf-8");
-      return this;
-    }
-
-    replace(
-      searchValue: {
-        [Symbol.replace](string: string, replaceValue: string): string;
-      },
-      replaceValue: string
-    ) {
-      this.loadContent();
-      this.content = this.content!.replace(searchValue, replaceValue);
-      return this;
-    }
-
-    replaceAll(content: string) {
-      this.content = content;
-      return this;
-    }
-
-    apply() {
-      if (this.content !== null)
-        fs.writeFileSync(this.file.path, this.content, "utf-8");
-      this.content = null;
-    }
-  };
-
-  public readonly path: string;
-
-  constructor(path: string) {
-    this.path = resolve(path);
-  }
-
-  editor() {
-    return new File.editor(this);
-  }
-}
+import { File, showChoiceMessage } from "./utils";
 
 export function activate(context: ExtensionContext) {
   const injection = new ThemeInjection(
@@ -68,7 +29,7 @@ export function activate(context: ExtensionContext) {
   if (currentVersion !== lastVersion) {
     context.globalState.update("extensionVersion", currentVersion);
     if (context.globalState.get<boolean>("injected")) {
-      window.showInformationMessage(localize("reenableAfterUpdated"));
+      window.showInformationMessage(localize("extension.reenableAfterUpdated"));
       commands.executeCommand("frosted-glass-theme.enableTheme");
     }
   }
@@ -79,15 +40,21 @@ export function activate(context: ExtensionContext) {
   }
 
   function restartPromptMessage() {
-    return isCursor() ? localize("restartIdeCursor") : localize("restartIde");
+    return isCursor()
+      ? localize("extension.action.restartIdeCursor")
+      : localize("extension.action.restartIde");
   }
 
   function enabledMessage() {
-    return isCursor() ? localize("enabledCursor") : localize("enabled");
+    return isCursor()
+      ? localize("extension.enabledCursor")
+      : localize("extension.enabled");
   }
 
   function appliedMessage() {
-    return isCursor() ? localize("appliedCursor") : localize("applied");
+    return isCursor()
+      ? localize("extension.appliedCursor")
+      : localize("extension.applied");
   }
 
   async function updateConfiguration() {
@@ -152,7 +119,7 @@ export function activate(context: ExtensionContext) {
           restartHost();
       } catch (e: any) {
         console.error(e);
-        window.showErrorMessage(localize("somethingWrong", e));
+        window.showErrorMessage(localize("extension.somethingWrong", e));
       }
     }
   );
@@ -164,12 +131,15 @@ export function activate(context: ExtensionContext) {
         await injection.restore();
         context.globalState.update("injected", false);
         if (
-          await showChoiceMessage(localize("disabled"), restartPromptMessage())
+          await showChoiceMessage(
+            localize("extension.disabled"),
+            restartPromptMessage()
+          )
         )
           restartHost();
       } catch (e: any) {
         console.error(e);
-        window.showErrorMessage(localize("somethingWrong", e));
+        window.showErrorMessage(localize("extension.somethingWrong", e));
       }
     }
   );
@@ -179,13 +149,11 @@ export function activate(context: ExtensionContext) {
     async () => {
       try {
         await updateConfiguration();
-        if (
-          await showChoiceMessage(appliedMessage(), restartPromptMessage())
-        )
+        if (await showChoiceMessage(appliedMessage(), restartPromptMessage()))
           restartHost();
       } catch (e: any) {
         console.error(e);
-        window.showErrorMessage(localize("somethingWrong", e));
+        window.showErrorMessage(localize("extension.somethingWrong", e));
       }
     }
   );
@@ -193,36 +161,43 @@ export function activate(context: ExtensionContext) {
   const setup = commands.registerCommand(
     "frosted-glass-theme.setup",
     async () => {
-      blockConfigChangedMsg = true;
-      if (await setupFunc(context)) await updateConfiguration();
-      blockConfigChangedMsg = false;
+      try {
+        blockConfigChangedMsg = true;
+        if (await setupFunc(context)) await updateConfiguration();
+      } finally {
+        blockConfigChangedMsg = false;
+      }
     }
   );
 
-  const openCSS = commands.registerCommand("frosted-glass-theme.openCSS", async () => {
-    const cssPath = isCursor()
-      ? (
-          await window.showQuickPick(
-            [
-              {
-                label: "Cursor targeted overrides",
-                description: "Panel backgrounds, chat menus, quit dialog",
-                path: "inject/cursor-targeted-overrides.css",
-              },
-              {
-                label: "Shared inject styles",
-                description: "Notifications, menus, and shared frosted surfaces",
-                path: "src-inject/vscode-frosted-glass-theme.css",
-              },
-            ],
-            { title: "Frosted Glass Theme: Open CSS" }
-          )
-        )?.path ?? "inject/cursor-targeted-overrides.css"
-      : "inject/vscode-frosted-glass-theme.css";
-    return workspace
-      .openTextDocument(Uri.joinPath(context.extensionUri, cssPath))
-      .then(window.showTextDocument);
-  });
+  const openCSS = commands.registerCommand(
+    "frosted-glass-theme.openCSS",
+    async () => {
+      const cssPath = isCursor()
+        ? (
+            await window.showQuickPick(
+              [
+                {
+                  label: "Cursor targeted overrides",
+                  description: "Panel backgrounds, chat menus, quit dialog",
+                  path: "inject/cursor-targeted-overrides.css",
+                },
+                {
+                  label: "Shared inject styles",
+                  description:
+                    "Notifications, menus, and shared frosted surfaces",
+                  path: "src-inject/vscode-frosted-glass-theme.css",
+                },
+              ],
+              { title: "Frosted Glass Theme: Open CSS" }
+            )
+          )?.path ?? "inject/cursor-targeted-overrides.css"
+        : "inject/vscode-frosted-glass-theme.css";
+      return workspace
+        .openTextDocument(Uri.joinPath(context.extensionUri, cssPath))
+        .then(window.showTextDocument);
+    }
+  );
 
   const openConfig = commands.registerCommand(
     "frosted-glass-theme.openConfig",
@@ -239,22 +214,66 @@ export function activate(context: ExtensionContext) {
     generateThemeModFunc
   );
 
+  const enableExtensionWebviewPatch = commands.registerCommand(
+    "frosted-glass-theme.enableExtensionWebviewPatch",
+    async () => {
+      if (
+        await showChoiceMessage(
+          localize("extensionWebviewPatch.warning"),
+          localize("common.yes")
+        )
+      ) {
+        new File(path.join(env.appRoot, "out", "main.js"))
+          .editor()
+          .replace(
+            /(webPreferences\s*:\s*\{)(?!\s*webSecurity)/,
+            `$1webSecurity: false,`
+          )
+          .apply();
+
+        try {
+          blockConfigChangedMsg = true;
+          const fgtConf = workspace.getConfiguration();
+          const currentPatches = fgtConf.inspect(
+            "frosted-glass-theme.extensionWebviewPatch"
+          )?.globalValue as string[] | undefined;
+          if (!currentPatches || currentPatches.length === 0)
+            await fgtConf.update(
+              "frosted-glass-theme.extensionWebviewPatch",
+              [
+                "GitHub.vscode-pull-request-github",
+                "mhutchie.git-graph",
+                "eamodio.gitlens",
+              ],
+              ConfigurationTarget.Global
+            );
+          commands.executeCommand("frosted-glass-theme.applyConfig");
+        } finally {
+          blockConfigChangedMsg = false;
+        }
+      }
+    }
+  );
+
   let blockConfigChangedMsg = false;
   const onConfigureChanged = workspace.onDidChangeConfiguration(async e => {
     if (
       !blockConfigChangedMsg &&
       e.affectsConfiguration("frosted-glass-theme")
     ) {
-      blockConfigChangedMsg = true;
-      if (
-        await showChoiceMessage(
-          localize("configChanged"),
-          localize("applyChanges")
-        )
-      ) {
-        commands.executeCommand("frosted-glass-theme.applyConfig");
+      try {
+        blockConfigChangedMsg = true;
+        if (
+          await showChoiceMessage(
+            localize("extension.configChanged"),
+            localize("extension.action.applyChanges")
+          )
+        ) {
+          commands.executeCommand("frosted-glass-theme.applyConfig");
+        }
+      } finally {
+        blockConfigChangedMsg = false;
       }
-      blockConfigChangedMsg = false;
     }
   });
 
@@ -266,6 +285,7 @@ export function activate(context: ExtensionContext) {
     openCSS,
     openConfig,
     generateThemeMod,
+    enableExtensionWebviewPatch,
     onConfigureChanged
   );
 }

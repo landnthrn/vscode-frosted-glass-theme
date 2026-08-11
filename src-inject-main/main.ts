@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from "electron/main";
+import { app, BrowserWindow, screen } from "electron";
 import { proxy } from "../common/proxy";
 import { getMicaGeometry } from "../common/fakeMicaGeometry";
 import config from "../config/config.json" with { type: "json" };
@@ -68,4 +68,15 @@ if (config.fakeMica.enabled) {
       );
     });
   });
+}
+
+if (config.extensionWebviewPatch.length !== 0) {
+  app.commandLine.appendSwitch("disable-web-security");
+  app.commandLine.appendSwitch("disable-site-isolation-trials");
+  app.commandLine.appendSwitch(
+    "disable-features",
+    "IsolateOrigins,site-per-process,OutOfBlinkCors"
+  );
+  app.commandLine.appendSwitch("disable-blink-features", "OutOfBlinkCors");
+  app.commandLine.appendSwitch("allow-running-insecure-content");
 }
