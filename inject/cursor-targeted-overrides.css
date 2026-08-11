@@ -115,30 +115,45 @@
 /* --- sent message bubbles (past user messages only) --- */
 /* sentMessageBubbleBackground; sentMessageBubbleBlur */
 
-/* collapsed */
+/* collapsed — older shell paints .composer-human-message */
 .monaco-workbench
   .part.auxiliarybar
   .composer-human-message:has(
     .aislash-editor-input-readonly[contenteditable="false"]
   ) {
   contain: none !important;
+  isolation: auto !important;
   background: var(--fgt-cursor-sent-message-bubble-background, #00000000) !important;
   background-color: var(--fgt-cursor-sent-message-bubble-background, #00000000) !important;
-  backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px));
-  -webkit-backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px));
+  backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px)) !important;
+  -webkit-backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px)) !important;
 }
 
-/* expanded (paint moves to .ai-input-full-input-box inside message rows) */
+/* expanded / execution layout — Cursor paints the container via inline color-mix */
 .monaco-workbench
   .part.auxiliarybar
-  [id^="bubble-"]
-  .composer-human-message-container
-  .ai-input-full-input-box.full-input-box {
+  .composer-human-message-container:has(.ai-input-full-input-box.full-input-box) {
   contain: none !important;
+  isolation: auto !important;
   background: var(--fgt-cursor-sent-message-bubble-background, #00000000) !important;
   background-color: var(--fgt-cursor-sent-message-bubble-background, #00000000) !important;
-  backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px));
-  -webkit-backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px));
+  backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px)) !important;
+  -webkit-backdrop-filter: blur(var(--fgt-cursor-sent-message-bubble-blur, 8px)) !important;
+}
+
+/* keep inner input box clear so blur is not double-stacked */
+.monaco-workbench
+  .part.auxiliarybar
+  .composer-human-message-container:has(.ai-input-full-input-box.full-input-box)
+  .ai-input-full-input-box.full-input-box,
+.monaco-workbench
+  .part.auxiliarybar
+  .composer-human-message-container:has(.ai-input-full-input-box.full-input-box)
+  .composer-input-blur-wrapper {
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* --- @ mention menu --- */
